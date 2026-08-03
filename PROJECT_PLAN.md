@@ -316,18 +316,21 @@ git push --tags
 
 | # | Deliverable | Week | Status |
 |---|---|---|---|
-| 1 | GitHub repository with weekly commit history | All weeks | ⬜ |
-| 2 | DVC-versioned dataset with pointer in Git | Week 1 | ⬜ |
-| 3 | MLflow experiment logs — 2+ tracked runs | Week 2 | ⬜ |
-| 4 | `reports/model_comparison.md` | Week 2 | ⬜ |
-| 5 | Working FastAPI `/predict` endpoint | Week 3 | ⬜ |
-| 6 | Docker container builds and runs | Week 3 | ⬜ |
-| 7 | `reports/api_test_report.md` with curl evidence | Week 3 | ⬜ |
-| 8 | Prediction log CSV | Week 4 | ⬜ |
-| 9 | `reports/drift_report.md` with KS test results | Week 4 | ⬜ |
-| 10 | Final `README.md` with architecture diagram | Week 4 | ⬜ |
-| 11 | 5–7 minute demo video | Aug 23 | ⬜ |
-| 12 | Submitted GitHub link on BITS portal | Aug 24 | ⬜ |
+| 1 | GitHub repository created with initial commit | Setup | ✅ Done — Aug 2 |
+| 2 | Project plan committed and pushed to repo | Setup | ✅ Done — Aug 2 |
+| 3 | DVC-versioned dataset with pointer in Git | Week 1 | ⬜ Pending |
+| 4 | Data ingestion + validation pipeline complete | Week 1 | ⬜ Pending |
+| 5 | Feature engineering pipeline complete | Week 1 | ⬜ Pending |
+| 6 | MLflow experiment logs — 2+ tracked runs | Week 2 | ⬜ Pending |
+| 7 | `reports/model_comparison.md` | Week 2 | ⬜ Pending |
+| 8 | Working FastAPI `/predict` endpoint | Week 3 | ⬜ Pending |
+| 9 | Docker container builds and runs | Week 3 | ⬜ Pending |
+| 10 | `reports/api_test_report.md` with curl evidence | Week 3 | ⬜ Pending |
+| 11 | Prediction log CSV | Week 4 | ⬜ Pending |
+| 12 | `reports/drift_report.md` with KS test results | Week 4 | ⬜ Pending |
+| 13 | Final `README.md` with architecture diagram | Week 4 | ⬜ Pending |
+| 14 | 5–7 minute demo video | Aug 23 | ⬜ Pending |
+| 15 | Submitted GitHub link on BITS portal | Aug 24 | ⬜ Pending |
 
 ---
 
@@ -335,8 +338,8 @@ git push --tags
 
 | Date | What Was Done |
 |---|---|
-| Aug 2, 2026 | Project brief read. Flavor A selected. Group formed. GitHub repository created. Project plan drafted and committed. |
-| Aug 3, 2026 | *(to be updated)* |
+| Aug 2, 2026 | Read and analysed full project brief. Selected Flavor A (ETA Prediction). Confirmed group formation with professor. Created GitHub account (`2025paml539-lab`). Created public repository `mleng-mini-project` at `https://github.com/2025paml539-lab/mleng-mini-project`. Drafted and committed `PROJECT_PLAN.md` with full 4-week breakdown. Verified Python 3.14.5 and Git 2.54.0 installed on local machine. GitHub authentication configured. 2 commits pushed successfully. |
+| Aug 3, 2026 | *(to be updated — dataset download)* |
 | Aug 8, 2026 | *(to be updated — Week 1 complete)* |
 | Aug 15, 2026 | *(to be updated — Week 2 complete)* |
 | Aug 20, 2026 | *(to be updated — Week 3 complete)* |
