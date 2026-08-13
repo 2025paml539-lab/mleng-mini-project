@@ -1,0 +1,50 @@
+============================================================
+WEEK 1 - PIPELINE RUN OUTPUT SUMMARY
+PCAM ZC412 | Mini-Project-I | Flavor A - ETA Prediction
+Team: Kishore Nandhalu | Vinay | Vishruth
+============================================================
+
+-- INGEST --
+  Rows loaded     : 1,458,644
+  Columns         : ['id', 'vendor_id', 'pickup_datetime', 'dropoff_datetime', 'passenger_count', 'pickup_longitude', 'pickup_latitude', 'dropoff_longitude', 'dropoff_latitude', 'store_and_fwd_flag', 'trip_duration']
+  Null values     : 0
+  Date range      : 2016-01-01 00:00:17 to 2016-06-30 23:59:39
+  Duration min    : 1s
+  Duration max    : 3526282s
+  Duration mean   : 959s
+
+-- VALIDATE --
+  L1 Schema        : PASS - all 11 columns, correct types, 0 nulls
+  L2 Range         : WARN - 689 rows removed (0.047%)
+    passenger_count out of 1-6     : 65 rows
+    coordinates outside NYC bounds : 196 rows
+    trip_duration outside 1-86400s : 4 rows
+  L3 Statistical   : PASS - 1,457,955 clean rows | mean 959s
+  L4 Business Rule : PASS - dropoff > pickup for all rows
+  Clean rows       : 1,457,955
+
+-- FEATURES --
+  Output shape     : 1,458,644 rows x 6 cols
+  Columns          : ['hour_of_day', 'day_of_week', 'is_weekend', 'distance_km', 'pickup_hour_bin', 'trip_duration']
+  hour_of_day      : range 0-23
+  day_of_week      : range 0-6
+  is_weekend       : 416,234 weekend trips (28.5%)
+  distance_km mean : 3.44 km
+  distance_km max  : 1240.91 km
+  pickup_hour_bin  : {'evening': 499442, 'afternoon': 430245, 'morning': 357477, 'night': 171480}
+
+-- FEATURE SCHEMA (artifacts/feature_schema.json) --
+  distance_km mean : 3.4409
+  distance_km std  : 4.2965
+  feature_columns  : ['hour_of_day', 'day_of_week', 'is_weekend', 'distance_km', 'pickup_hour_bin', 'trip_duration']
+
+-- DVC VERSIONING --
+  File tracked     : data/raw/train.csv
+  DVC pointer      : data/raw/train.csv.dvc (committed to Git)
+  MD5 hash         : e59c291a4b1c640f1dab33b89daa22e1
+  File size        : 200,589,097 bytes (191 MB)
+  Git tag          : v1.0-week1
+
+============================================================
+All Week 1 checks PASSED. Pipeline ready for Week 2 (model training).
+============================================================
