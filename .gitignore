@@ -1,0 +1,21 @@
+# Data — tracked by DVC, not Git
+data/raw/*.csv
+data/raw/*.zip
+data/processed/
+
+# ML artifacts
+artifacts/*.pkl
+artifacts/*.pt
+mlruns/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db

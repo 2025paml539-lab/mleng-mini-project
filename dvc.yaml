@@ -1,0 +1,26 @@
+stages:
+  ingest:
+    cmd: python pipeline/ingest.py
+    deps:
+      - pipeline/ingest.py
+      - data/raw/train.csv
+    outs:
+      - data/raw/train.csv:
+          cache: false
+
+  validate:
+    cmd: python pipeline/validate.py
+    deps:
+      - pipeline/validate.py
+      - data/raw/train.csv
+
+  featurize:
+    cmd: python pipeline/features.py
+    deps:
+      - pipeline/features.py
+      - data/raw/train.csv
+    outs:
+      - data/processed/features.csv
+    params:
+      - params.yaml:
+          - featurize

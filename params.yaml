@@ -1,0 +1,21 @@
+featurize:
+  target_col: trip_duration
+  drop_cols:
+    - id
+    - dropoff_datetime
+    - store_and_fwd_flag
+  lat_min: 40.4
+  lat_max: 41.0
+  lon_min: -74.3
+  lon_max: -73.6
+
+train:
+  test_size: 0.2
+  random_state: 42
+  models:
+    linear_regression: {}
+    xgboost:
+      n_estimators: 200
+      max_depth: 6
+      learning_rate: 0.1
+      random_state: 42
