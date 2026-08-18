@@ -1,7 +1,7 @@
 # NYC Taxi ETA Prediction — End-to-End ML Pipeline
 ### PCAM ZC412 · Mini-Project-I · Flavor A
 **Team:** Kishore Nandhalu | Vinay | Vishruth
-**Due:** 24 August 2026 | **Repo:** https://github.com/2025paml539-lab/mleng-mini-project
+**Due:** 31 August 2026, 11:59 PM | **Repo:** https://github.com/2025paml539-lab/mleng-mini-project
 
 ---
 

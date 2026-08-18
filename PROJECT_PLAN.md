@@ -1,7 +1,7 @@
 # Mini-Project-I — Project Plan
 ### PCAM ZC412 — Machine Learning Engineering
 ### Flavor A: Delivery / Ride ETA Prediction
-**Due Date:** Monday, 24 August 2026
+**Due Date:** Monday, 31 August 2026, 11:59 PM
 **Team Members:** Kishore Nandhalu | Vinay | Vishruth
 **Repository:** https://github.com/2025paml539-lab/mleng-mini-project
 
@@ -339,8 +339,8 @@ git push --tags
 | 14 | Prediction log CSV | Week 4 | ⬜ Pending |
 | 15 | `reports/drift_report.md` with KS test results | Week 4 | ⬜ Pending |
 | 16 | Final `README.md` with architecture diagram | Week 4 | ⬜ Pending |
-| 17 | 5–7 minute demo video | Aug 23 | ⬜ Pending |
-| 18 | Submitted GitHub link on BITS portal | Aug 24 | ⬜ Pending |
+| 17 | 5–7 minute demo video | Aug 30 | ⬜ Pending |
+| 18 | Submitted GitHub link on BITS portal | Aug 31 | ⬜ Pending |
 
 ---
 
@@ -352,7 +352,7 @@ git push --tags
 | Aug 15, 2026 | *(to be updated — Week 2 complete)* |
 | Aug 20, 2026 | *(to be updated — Week 3 complete)* |
 | Aug 23, 2026 | *(to be updated — Week 4 complete, demo recorded)* |
-| Aug 24, 2026 | *(to be updated — submitted)* |
+| Aug 31, 2026 | *(to be updated — submitted by 11:59 PM)* |
 
 ---
 
