@@ -1,94 +1,82 @@
-# Model Comparison Report — Week 2
-### PCAM ZC412 | Mini-Project-I | Flavor A — ETA Prediction
+# Model Comparison Report
+## Week 2 — PCAM ZC412 Mini-Project-I
 **Team:** Kishore Nandhalu | Vinay | Vishruth
 
 ---
 
-## Experiment Setup
+## Setup
 
-| Item | Detail |
-|---|---|
-| Dataset | `data/processed/features.csv` — 1,458,644 rows |
-| Train / Test split | 80% / 20% — temporal split (no shuffle, respects time order) |
-| Train rows | 1,166,915 |
-| Test rows | 291,729 |
-| Target | `log1p(trip_duration)` — log-transformed to reduce skew |
-| Tracking | MLflow experiment: `eta-prediction` |
-| Random seed | 42 (fixed — fully reproducible) |
+We trained two models on the engineered features from Week 1 and tracked both runs using MLflow under the experiment name `eta-prediction`.
+
+- **Dataset:** `data/processed/features.csv` — 1,458,644 rows
+- **Split:** 80/20 temporal split (no shuffle — preserves time order of trips)
+- **Train:** 1,166,915 rows | **Test:** 291,729 rows
+- **Target:** `log1p(trip_duration)` — log-transformed to reduce the effect of extreme values
+- **Random seed:** 42 fixed across both runs
 
 ---
 
-## Features Used
+## Features
 
-| Feature | Type | Description |
-|---|---|---|
-| `hour_of_day` | Numerical | Hour extracted from pickup_datetime (0-23) |
-| `day_of_week` | Numerical | Weekday (0=Mon, 6=Sun) |
-| `is_weekend` | Binary | 1 if Saturday or Sunday |
-| `distance_km` | Numerical | Haversine distance between pickup and dropoff |
-| `pickup_hour_bin_enc` | Encoded | night/morning/afternoon/evening — label encoded |
+| Feature | Description |
+|---|---|
+| `hour_of_day` | Hour extracted from pickup time (0–23) |
+| `day_of_week` | 0 = Monday, 6 = Sunday |
+| `is_weekend` | 1 if Saturday or Sunday, else 0 |
+| `distance_km` | Haversine distance between pickup and dropoff GPS coords |
+| `pickup_hour_bin_enc` | Time of day bucket (night/morning/afternoon/evening), label encoded |
 
 ---
 
 ## Results
 
-| Metric | Linear Regression | XGBoost | Better |
-|---|---|---|---|
-| **RMSE (seconds)** | 282,405,528 s | **3,162 s** | XGBoost |
-| **MAE (seconds)** | 525,057 s | **344 s** | XGBoost |
-| **R²** | 0.3883 | **0.6532** | XGBoost |
-| Training time | ~2 sec | ~12 sec | LR faster |
-| Inference latency | Very fast | Fast | LR faster |
+| | Linear Regression | XGBoost |
+|---|---|---|
+| RMSE | 282,405,528 s | **3,162 s** |
+| MAE | 525,057 s | **344 s** |
+| R2 | 0.3883 | **0.6532** |
+| Training time | ~2 sec | ~12 sec |
 
 ---
 
-## Why XGBoost Wins
+## Why We Picked XGBoost
 
-**R² improvement = 0.2649 (exceeds 0.05 threshold)**
+The R2 improvement is 0.2649 which is well above the 0.05 threshold we set.
 
-1. **Linear Regression fails on skewed data** — `distance_km` has extreme outliers (max 1,240 km). Linear models assume a linear relationship and are sensitive to outliers. Even with log-transform on the target, the features remain skewed causing very high RMSE.
+Linear Regression performed very poorly here. The main reason is that trip duration does not have a simple linear relationship with distance — a 3km trip during evening rush hour can take 40 minutes while the same distance at 2am takes 8 minutes. Linear models cannot capture this kind of interaction between features. Even after applying log-transform on the target, the RMSE remained extremely high.
 
-2. **XGBoost handles non-linearity** — Trip duration is not a linear function of distance. Rush-hour trips of 2km can take longer than off-peak trips of 10km. XGBoost captures these non-linear interactions through tree splits.
+XGBoost handles this through tree splits which naturally capture non-linear patterns and feature interactions. The feature importance plot also confirms that `distance_km` is the strongest predictor (importance ~0.55) followed by `hour_of_day` (~0.20), which makes intuitive sense.
 
-3. **XGBoost RMSE of 3,162s (~52 min)** — Acceptable for a baseline model on raw GPS + time features only. No weather or traffic data included. Further improvement possible in future iterations.
-
-4. **Reproducibility confirmed** — Re-running `python training/train.py` with `random_state=42` produces identical metrics.
+The XGBoost RMSE of 3,162 seconds (~52 minutes) is reasonable for a baseline model that uses only GPS coordinates and time features — no weather or traffic data is included. There is room for improvement in future iterations.
 
 ---
 
-## Selected Model
+## Reproducibility
 
-**Winner: XGBoost**
-- Saved to: `artifacts/model.pkl`
-- MLflow run logged with all params, metrics, and model artifact
-- Selection criteria: R² improvement > 0.05 over baseline
+Re-running `python training/train.py` with the same `random_state=42` and the same `data/processed/features.csv` produces identical metrics every time. This was verified manually.
 
 ---
 
 ## MLflow Runs
 
-| Run Name | Run ID (first 8) | RMSE | MAE | R2 |
-|---|---|---|---|---|
-| linear_regression | 6675366d | 282,405,528 s | 525,057 s | 0.3883 |
-| xgboost | fe7eebcc | 3,162 s | 344 s | 0.6532 |
+Both runs are logged in the `eta-prediction` experiment in `mlruns/`.
 
-To view full MLflow UI:
-```bash
-mlflow ui
-# Open: http://127.0.0.1:5000
+| Run | RMSE | MAE | R2 |
+|---|---|---|---|
+| linear_regression | 282,405,528 s | 525,057 s | 0.3883 |
+| xgboost | 3,162 s | 344 s | 0.6532 |
+
+To view runs locally:
 ```
+mlflow ui
+```
+Then open `http://127.0.0.1:5000` in a browser.
 
 ---
 
-## XGBoost Hyperparameters (from params.yaml)
+## Saved Artifacts
 
-| Parameter | Value |
-|---|---|
-| n_estimators | 200 |
-| max_depth | 6 |
-| learning_rate | 0.1 |
-| random_state | 42 |
-
----
-
-*Generated: Aug 2026 | Repo: https://github.com/2025paml539-lab/mleng-mini-project*
+- `artifacts/model.pkl` — selected XGBoost model
+- `artifacts/scaler.pkl` — StandardScaler fitted on training data only
+- `artifacts/label_encoder.pkl` — LabelEncoder for pickup_hour_bin
+- `artifacts/model_selection.json` — metrics + selection justification

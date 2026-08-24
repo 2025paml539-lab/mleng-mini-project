@@ -10,21 +10,18 @@
 ## Project Overview
 
 **Problem Statement:**
-Build an end-to-end ML pipeline that predicts taxi trip duration based on pickup/dropoff location, time of day, day of week, and distance. The system will ingest raw trip data, engineer time- and location-based features, train and compare regression models, deploy the best model as a REST API, and monitor it for accuracy drift as traffic patterns change.
+Build an end-to-end ML pipeline that predicts NYC taxi trip duration based on pickup/dropoff GPS coordinates, time of day, day of week, and distance. The system covers data ingestion, validation, feature engineering, model training, REST API serving, and drift monitoring.
 
-**Dataset:** NYC Taxi Trip Duration — Kaggle Competition Dataset
+**Dataset:** NYC Taxi Trip Duration — Kaggle
 - Source: `https://www.kaggle.com/competitions/nyc-taxi-trip-duration/data`
-- ~1.4 million NYC taxi trips
-- Target variable: `trip_duration` (seconds)
+- 1,458,644 taxi trips (Jan–Jun 2016)
+- Target: `trip_duration` (seconds)
 
-**Tools & Technologies:**
-- Python 3.14.5, pandas 2.2.2, scikit-learn 1.5.0, XGBoost 2.0.3
-- MLflow 2.13.2 (experiment tracking)
-- DVC 3.51.2 (dataset versioning)
-- FastAPI 0.111.0 (model serving)
-- Docker (packaging)
+**Tools:**
+- Python 3.14.5, pandas, scikit-learn, XGBoost
+- MLflow (experiment tracking), DVC (dataset versioning)
+- FastAPI (serving), Docker (packaging)
 - Git + GitHub (version control)
-- Pandera 0.19.3 (data validation)
 
 ---
 
@@ -33,24 +30,34 @@ Build an end-to-end ML pipeline that predicts taxi trip duration based on pickup
 ```
 mleng-mini-project/
 ├── data/
-│   ├── raw/
-│   │   └── train.csv.dvc         # DVC pointer — 1,458,644 rows (191MB, not in Git)
-│   └── processed/                # features.csv written by pipeline/features.py
+│   ├── raw/train.csv.dvc         # DVC pointer — 191MB CSV not in Git
+│   └── processed/features.csv   # output of pipeline/features.py
 ├── pipeline/
-│   ├── ingest.py                 # ✅ Loads CSV, prints shape/nulls/date range
-│   ├── validate.py               # ✅ 4-level validation — removed 689 outliers (0.047%)
-│   └── features.py               # ✅ 5 features engineered, saves features.csv + schema
-├── training/                     # Week 2 — to be built
-├── serving/                      # Week 3 — to be built
-├── monitoring/                   # Week 4 — to be built
+│   ├── ingest.py                 # Week 1: load + profile raw data
+│   ├── validate.py               # Week 1: 4-level validation
+│   └── features.py               # Week 1: feature engineering
+├── training/
+│   └── train.py                  # Week 2: LR + XGBoost with MLflow
+├── serving/                      # Week 3: FastAPI endpoint (pending)
+├── monitoring/                   # Week 4: drift detection (pending)
 ├── artifacts/
-│   └── feature_schema.json       # ✅ Transformation params saved for serving-time reuse
-├── reports/                      # Week 2–4 — to be built
-├── params.yaml                   # ✅ All hyperparameters (single source of truth)
-├── dvc.yaml                      # ✅ Pipeline stage definitions
-├── requirements.txt              # ✅ All dependencies pinned
-├── .gitignore                    # ✅ Excludes raw data, artifacts, __pycache__
-└── README.md                     # Week 4 — final version with architecture diagram
+│   ├── feature_schema.json
+│   ├── model.pkl
+│   ├── scaler.pkl
+│   ├── label_encoder.pkl
+│   └── model_selection.json
+├── reports/
+│   └── model_comparison.md       # Week 2: model comparison report
+├── outputs/
+│   ├── week1/                    # Week 1 charts + pipeline run log
+│   ├── week2/                    # Week 2 charts + training run log
+│   ├── week3/                    # Week 3 API test evidence (pending)
+│   └── week4/                    # Week 4 drift report (pending)
+├── params.yaml                   # all hyperparameters
+├── dvc.yaml                      # pipeline stage definitions
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
 
 ---
@@ -60,282 +67,126 @@ mleng-mini-project/
 ---
 
 ### Week 1 — Data Engineering & Feature Pipeline
-**Module:** M2 | **Dates:** Aug 2 – Aug 8, 2026
-
-#### Objective
-Set up the full data ingestion, validation, and feature engineering pipeline. Version the dataset using DVC.
+**Module:** M2 | **Completed:** Aug 13, 2026
 
 #### What Was Done
 
-**Setup & Data Ingestion** ✅
-- [x] Git repository initialised, connected to GitHub, initial commit pushed
-- [x] Python 3.14.5 and Git 2.54.0 verified on local machine
-- [x] `requirements.txt` created with all pinned dependencies
-- [x] NYC Taxi dataset downloaded from Kaggle — 1,458,644 rows, 191MB
-- [x] `pipeline/ingest.py` — loads CSV, prints shape, null counts, date range, duration stats
+- Git repo initialised, pushed to GitHub. Python 3.14.5 and Git 2.54.0 confirmed.
+- Downloaded NYC Taxi dataset from Kaggle — 1,458,644 rows, 191MB.
+- `pipeline/ingest.py` — loads CSV, prints shape, null counts, date range.
+- `pipeline/validate.py` — 4-level validation:
+  - L1 Schema: all 11 columns, correct types, 0 nulls — PASS
+  - L2 Range: 689 outlier rows (0.047%) removed — passenger count, NYC GPS bounds, duration limits
+  - L3 Statistical: 1,457,955 clean rows, mean duration 959s — PASS
+  - L4 Business: dropoff > pickup for all rows — PASS
+- `pipeline/features.py` — 5 features engineered:
+  - `hour_of_day`, `day_of_week`, `is_weekend`, `distance_km` (Haversine), `pickup_hour_bin`
+  - Output saved to `data/processed/features.csv`
+  - `artifacts/feature_schema.json` saved for serving-time reuse
+- DVC initialised, `data/raw/train.csv.dvc` pointer committed to Git
+- `dvc.yaml` and `params.yaml` created
 
-**Data Validation** ✅
-- [x] `pipeline/validate.py` — 4-level validation implemented and verified:
-  - L1 Schema: all 11 columns present, correct dtypes, 0 nulls — **PASS**
-  - L2 Range: removed 689 outlier rows (0.047%) — passenger count, NYC GPS bounds, duration 1–86400s
-  - L3 Statistical: 1,457,955 clean rows, mean duration 959s — **PASS**
-  - L4 Business rule: dropoff > pickup for all rows — **PASS**
-
-**Feature Engineering** ✅
-- [x] `pipeline/features.py` — 5 features engineered and verified:
-  - `hour_of_day`: range 0–23
-  - `day_of_week`: range 0–6
-  - `is_weekend`: 416,234 weekend trips
-  - `distance_km`: mean 3.44km, max 1,240km (Haversine formula)
-  - `pickup_hour_bin`: evening(499k), afternoon(430k), morning(357k), night(171k)
-- [x] Processed dataset saved: `data/processed/features.csv` — 1,458,644 rows x 6 cols
-- [x] `artifacts/feature_schema.json` saved — reused at serving time to prevent training-serving skew
-
-**Dataset Versioning** ✅
-- [x] DVC 3.51.2 installed and initialised
-- [x] `data/raw/train.csv.dvc` — DVC pointer file committed (MD5 hash + file size, not the 191MB CSV)
-- [x] `dvc.yaml` — pipeline stages defined (ingest → validate → featurize)
-- [x] `params.yaml` — all hyperparameters in one file
-
-#### Week 1 Actual Output
+#### Actual Terminal Output
 ```
 python pipeline/ingest.py
-→ [INGEST] Loaded: 1,458,644 rows x 11 cols | Nulls: 0 | Duration: 1s–3,526,282s | mean: 959s
+[INGEST] Loaded     : 1,458,644 rows x 11 cols
+[INGEST] Nulls      : 0 — all columns complete
+[INGEST] trip_duration — min: 1s  max: 3526282s  mean: 959s
+[INGEST] Date range : 2016-01-01 to 2016-06-30
 
 python pipeline/validate.py
-→ [L1 SCHEMA]   PASS — all 11 columns, correct types, 0 nulls
-→ [L2 RANGE]    WARN — 689 outlier rows (0.047%) removed
-→ [L3 STATS]    PASS — 1,457,955 rows | mean 959s
-→ [L4 BUSINESS] PASS — dropoff > pickup for all rows
-→ [VALIDATE] All checks passed ✓
+[L1 SCHEMA]   PASS
+[L2 RANGE]    WARN — 689 rows removed (0.047%)
+[L3 STATS]    PASS — 1,457,955 rows | mean 959s
+[L4 BUSINESS] PASS
+[VALIDATE] All checks passed
 
 python pipeline/features.py
-→ [FEATURES] 5 features engineered
-→ [FEATURES] Saved: data/processed/features.csv (1,458,644 rows x 6 cols)
-→ [FEATURES] Saved: artifacts/feature_schema.json ✓
+[FEATURES] Saved: data/processed/features.csv (1,458,644 rows x 6 cols)
+[FEATURES] Saved: artifacts/feature_schema.json
 ```
 
-#### Week 1 Git Commit
-```
-commit: "Week 1: data ingestion, 4-level validation, feature engineering pipeline — DVC dataset versioned"
-tag:    v1.0-week1
-files:  13 files changed, 381 insertions
-```
+**Git tag:** `v1.0-week1`
 
 ---
 
 ### Week 2 — Experimentation & Reproducibility
-**Module:** M3 | **Dates:** Aug 18 – Aug 24, 2026
+**Module:** M3 | **Completed:** Aug 24, 2026
 
 #### What Was Done
 
-**Experiment Tracking Setup** ✅
-- [x] MLflow 2.13.2 configured — file-based tracking (`mlruns/`)
-- [x] MLflow experiment created: `eta-prediction`
-- [x] All hyperparameters in `params.yaml` — no hardcoding
+- `training/train.py` built — trains Linear Regression and XGBoost, logs both to MLflow.
+- MLflow experiment: `eta-prediction` with file-based tracking in `mlruns/`.
+- All hyperparameters loaded from `params.yaml` — no hardcoding.
+- Temporal train/test split (80/20, no shuffle) — preserves time order.
+- `StandardScaler` fitted on training data only, saved to `artifacts/scaler.pkl`.
+- Target: `log1p(trip_duration)` to reduce skew.
+- Both models logged with params, RMSE, MAE, R2, and model artifact.
+- XGBoost selected as best model — saved to `artifacts/model.pkl`.
+- `reports/model_comparison.md` written with justification.
 
-**Model 1 — Linear Regression (Baseline)** ✅
-- [x] Temporal train/test split — 80/20, no shuffle (respects time order)
-- [x] `StandardScaler` fitted on training data only → `artifacts/scaler.pkl`
-- [x] `LabelEncoder` for `pickup_hour_bin` → `artifacts/label_encoder.pkl`
-- [x] Target: `log1p(trip_duration)` — reduces skew
-- [x] Logged to MLflow: params, RMSE, MAE, R², model artifact
+#### Results
 
-**Model 2 — XGBoost** ✅
-- [x] Same split and scaler as baseline — fair comparison
-- [x] n_estimators=200, max_depth=6, learning_rate=0.1, random_state=42
-- [x] Logged to MLflow: params, RMSE, MAE, R², model artifact
+| Metric | Linear Regression | XGBoost |
+|---|---|---|
+| RMSE | 282,405,528 s | **3,162 s** |
+| MAE | 525,057 s | **344 s** |
+| R2 | 0.3883 | **0.6532** |
 
-**Model Selection** ✅
-- [x] `reports/model_comparison.md` written with actual metrics and justification
-- [x] Best model saved → `artifacts/model.pkl`
-- [x] Selection decision saved → `artifacts/model_selection.json`
+XGBoost selected — R2 improvement of 0.2649 exceeds the 0.05 threshold. LR fails on this data because trip duration has a non-linear relationship with distance and time. See `reports/model_comparison.md` for full justification.
 
-#### Week 2 Actual Results
-
-| Metric | Linear Regression | XGBoost | Winner |
-|---|---|---|---|
-| RMSE | 282,405,528 s | **3,162 s** | XGBoost |
-| MAE | 525,057 s | **344 s** | XGBoost |
-| R2 | 0.3883 | **0.6532** | XGBoost |
-
-**Why XGBoost wins:** R2 improvement = 0.2649 (exceeds 0.05 threshold). LR fails due to non-linear relationship between distance and duration — XGBoost captures this via tree splits.
-
-**Reproducibility confirmed:** Re-running `python training/train.py` with `random_state=42` produces identical metrics.
-
-#### Week 2 Actual Output
+#### Actual Terminal Output
 ```
 python training/train.py
--> [TRAIN] Train: 1,166,915 rows | Test: 291,729 rows
--> [LR]  RMSE: 282,405,528s | MAE: 525,057s | R2: 0.3883
--> [XGB] RMSE: 3,162s       | MAE: 344s     | R2: 0.6532
--> [TRAIN] Winner - XGBoost
--> [TRAIN] Saved -> artifacts/model.pkl
+[TRAIN] Train: 1,166,915 rows | Test: 291,729 rows
+[LR]  RMSE: 282,405,528s | MAE: 525,057s | R2: 0.3883
+[XGB] RMSE: 3,162s       | MAE: 344s     | R2: 0.6532
+[TRAIN] Winner - XGBoost
+[TRAIN] Saved -> artifacts/model.pkl
 ```
 
-#### Week 2 Git Commit
-```
-commit: "Week 2: MLflow experiment tracking, Linear Regression vs XGBoost, XGBoost selected"
-tag:    v1.0-week2
-```
-
-#### Reproducibility Check
-- [ ] Delete `artifacts/model.pkl` and re-run `python training/train.py`
-- [ ] Confirm same metrics are produced (fixed seed, fixed data version)
-
-#### Week 2 Deliverable
-- MLflow UI showing 2+ tracked runs with full parameters and metrics
-- `reports/model_comparison.md` with model selection justification
-- Reproducible training pipeline
-
-#### Week 2 Git Commit
-```bash
-git add training/ reports/model_comparison.md artifacts/
-git commit -m "Week 2: MLflow experiment tracking, Linear Regression vs XGBoost, model selected"
-git push origin main
-git tag v1.0-week2
-git push --tags
-```
+**Git tag:** `v1.0-week2`
 
 ---
 
 ### Week 3 — Model Packaging & Deployment
-**Module:** M4 | **Dates:** Aug 16 – Aug 20, 2026
+**Module:** M4 | **Target:** Aug 26, 2026
 
-#### Objective
-Package the trained model as a Docker container and expose it as a FastAPI REST endpoint with proper input validation and error handling.
+#### Plan
 
-#### What I Will Do
-
-**Day 1–2: FastAPI Serving Endpoint**
-- [ ] Write `serving/schemas.py` — Pydantic models for request and response:
-  - Request: `pickup_datetime`, `pickup_longitude`, `pickup_latitude`, `dropoff_longitude`, `dropoff_latitude`, `passenger_count`
-  - Response: `predicted_duration_seconds`, `predicted_duration_minutes`, `model_version`
-- [ ] Write `serving/api.py`:
-  - Load model and scaler once at startup (not per request)
-  - `POST /predict` — accepts trip details, returns ETA
-  - `GET /health` — returns model version and status
-  - Input validation via Pydantic (invalid coordinates, negative passenger count → HTTP 422)
+- `serving/schemas.py` — Pydantic request/response models
+- `serving/api.py` — FastAPI with `/predict` and `/health` endpoints
+  - Load model and scaler once at startup
+  - Input validation — reject invalid coordinates, passenger count out of range
   - Log every request with timestamp
-
-**Day 3: Containerization**
-- [ ] Write `Dockerfile`:
-  - Base image: `python:3.11-slim`
-  - Copy requirements, install dependencies (layer caching)
-  - Copy serving code and artifacts
-  - Non-root user for security
-  - Expose port 8000
-- [ ] Build image: `docker build -t eta-predictor:v1 .`
-- [ ] Run container: `docker run -p 8000:8000 eta-predictor:v1`
-
-**Day 4–5: API Testing & Documentation**
-- [ ] Test valid request with `curl`:
-  ```bash
-  curl -X POST http://localhost:8000/predict \
-    -H "Content-Type: application/json" \
-    -d '{"pickup_datetime":"2016-06-30 23:59:58","pickup_longitude":-73.982155,"pickup_latitude":40.767937,"dropoff_longitude":-73.964630,"dropoff_latitude":40.765602,"passenger_count":1}'
-  ```
-- [ ] Test invalid inputs and confirm proper error responses (HTTP 422)
-- [ ] Write `reports/api_test_report.md` — document all test cases with request/response
-
-#### Week 3 Deliverable
-- Docker container running locally on port 8000
-- Working `/predict` endpoint tested with sample inputs
-- `reports/api_test_report.md` with curl test evidence
-
-#### Week 3 Git Commit
-```bash
-git add serving/ Dockerfile reports/api_test_report.md
-git commit -m "Week 3: FastAPI endpoint, Docker packaging, input validation, API tested"
-git push origin main
-git tag v1.0-week3
-git push --tags
-```
+- `Dockerfile` — containerise the serving API
+- Test with curl, document in `reports/api_test_report.md`
 
 ---
 
 ### Week 4 — Monitoring, Drift & Retraining
-**Module:** M5 | **Dates:** Aug 21 – Aug 23, 2026
+**Module:** M5 | **Target:** Aug 30, 2026
 
-#### Objective
-Implement prediction logging, simulate data drift, detect it with statistical tests, and design a retraining trigger strategy.
+#### Plan
 
-#### What I Will Do
-
-**Day 1: Prediction Logging**
-- [ ] Write `monitoring/logger.py`:
-  - Log every prediction: timestamp, all input features, predicted value, model version
-  - Append to `monitoring/prediction_log.csv`
-  - Wire into `serving/api.py` so every `/predict` call is automatically logged
-
-**Day 2: Drift Simulation**
-- [ ] Write `monitoring/simulate_drift.py`:
-  - Scenario 1 — Rush-hour surge: inject trips with unusually long distances and peak-hour timestamps
-  - Scenario 2 — Festival/holiday pattern: inject unusually high passenger counts with short distances
-  - Generate 500 synthetic drifted records and append to prediction log
-
-**Day 3: Drift Detection & Retraining Design**
-- [ ] Write `monitoring/drift_detector.py`:
-  - Load training reference distribution
-  - Load recent prediction log window (last 500 predictions)
-  - Run KS test on each numerical feature: `distance_km`, `hour_of_day`, `passenger_count`
-  - Run Chi-squared test on categorical features: `day_of_week`, `is_weekend`
-  - Print drift alert if p-value < 0.05
-- [ ] Write `reports/drift_report.md`:
-  - Show KS test results before drift simulation (p-values, no drift detected)
-  - Show KS test results after drift simulation (p-values, drift detected)
-  - Document which features drifted and by how much
-
-**Retraining Trigger Design (documented in drift_report.md):**
-- Trigger condition: `distance_km` KS p-value < 0.05 for 3 consecutive monitoring windows
-- Action: flag for human review → approve → re-run `python training/train.py` with new data
-- Rationale: distance is the most predictive feature; drift here has the highest business impact
-
-#### Week 4 Deliverable
-- Prediction logger integrated into the API
-- Drift simulation producing measurable distribution shift
-- Drift detector identifying the shift with statistical evidence
-- `reports/drift_report.md` showing before/after comparison
-
-#### Week 4 Git Commit
-```bash
-git add monitoring/ reports/drift_report.md README.md
-git commit -m "Week 4: prediction logging, drift simulation, KS-test monitoring, final README"
-git push origin main
-git tag v1.0-final
-git push --tags
-```
-
----
-
-## Model Selection Justification
-
-| Metric | Linear Regression | XGBoost | Winner |
-|---|---|---|---|
-| RMSE (seconds) | TBD after training | TBD after training | TBD |
-| MAE (seconds) | TBD after training | TBD after training | TBD |
-| R² | TBD after training | TBD after training | TBD |
-| Training time | Fast | Moderate | LR faster |
-| Inference latency | Very fast | Fast | LR faster |
-
-**Decision criteria:**
-- If XGBoost R² improvement over Linear Regression is > 5%, use XGBoost (the accuracy gain justifies the added complexity)
-- If improvement < 5%, use Linear Regression (simpler, faster, more maintainable)
-- Either way: both models are logged in MLflow for full traceability
+- `monitoring/logger.py` — log every prediction to CSV
+- `monitoring/simulate_drift.py` — inject rush-hour surge data to simulate drift
+- `monitoring/drift_detector.py` — KS test on feature distributions, alert if p < 0.05
+- `reports/drift_report.md` — before/after comparison with retraining trigger design
 
 ---
 
 ## Feature Engineering Decisions
 
-| Feature | Source | Transformation | Justification |
+| Feature | Source | How | Why |
 |---|---|---|---|
-| `hour_of_day` | pickup_datetime | Extract hour (0–23) | Traffic patterns differ strongly by hour |
-| `day_of_week` | pickup_datetime | Extract weekday (0–6) | Weekday vs weekend has different trip patterns |
-| `is_weekend` | day_of_week | Binary (Sat/Sun = 1) | Captures weekend leisure vs weekday commute |
-| `distance_km` | GPS coordinates | Haversine formula | Most direct predictor of trip duration |
-| `pickup_hour_bin` | hour_of_day | 4 bins: morning/afternoon/evening/night | Non-linear time effects |
+| `hour_of_day` | pickup_datetime | Extract hour 0–23 | Traffic varies strongly by hour |
+| `day_of_week` | pickup_datetime | Extract weekday 0–6 | Weekday vs weekend patterns differ |
+| `is_weekend` | day_of_week | 1 if Sat/Sun | Leisure vs commute trips differ |
+| `distance_km` | GPS coords | Haversine formula | Strongest predictor of duration |
+| `pickup_hour_bin` | hour_of_day | night/morning/afternoon/evening | Captures non-linear time effects |
 
-**All transformation parameters saved to `artifacts/feature_schema.json` and reused identically at serving time to prevent training-serving skew.**
+All transformation parameters are saved to `artifacts/feature_schema.json` and reused at serving time to prevent training-serving skew.
 
 ---
 
@@ -343,24 +194,24 @@ git push --tags
 
 | # | Deliverable | Week | Status |
 |---|---|---|---|
-| 1 | GitHub repository with weekly commit history | Setup | ✅ Done — Aug 13 |
-| 2 | Project plan committed and pushed | Setup | ✅ Done — Aug 13 |
-| 3 | `pipeline/ingest.py` — data loading verified | Week 1 | ✅ Done — Aug 13 |
-| 4 | `pipeline/validate.py` — 4-level validation complete | Week 1 | ✅ Done — Aug 13 |
-| 5 | `pipeline/features.py` — 5 features engineered | Week 1 | ✅ Done — Aug 13 |
-| 6 | `data/raw/train.csv.dvc` — dataset DVC versioned | Week 1 | ✅ Done — Aug 13 |
-| 7 | `artifacts/feature_schema.json` committed | Week 1 | ✅ Done — Aug 13 |
-| 8 | Tag `v1.0-week1` pushed | Week 1 | ✅ Done — Aug 13 |
-| 9 | MLflow experiment logs — 2+ tracked runs | Week 2 | ✅ Done — Aug 24 |
-| 10 | `reports/model_comparison.md` | Week 2 | ✅ Done — Aug 24 |
-| 11 | Working FastAPI `/predict` endpoint | Week 3 | ⬜ Pending |
+| 1 | GitHub repo with weekly commit history | Setup | ✅ Aug 13 |
+| 2 | Project plan pushed to repo | Setup | ✅ Aug 13 |
+| 3 | `pipeline/ingest.py` running with output | Week 1 | ✅ Aug 13 |
+| 4 | `pipeline/validate.py` — 4-level validation | Week 1 | ✅ Aug 13 |
+| 5 | `pipeline/features.py` — 5 features engineered | Week 1 | ✅ Aug 13 |
+| 6 | Dataset versioned with DVC | Week 1 | ✅ Aug 13 |
+| 7 | Tag `v1.0-week1` pushed | Week 1 | ✅ Aug 13 |
+| 8 | MLflow — 2 tracked experiments | Week 2 | ✅ Aug 24 |
+| 9 | `reports/model_comparison.md` | Week 2 | ✅ Aug 24 |
+| 10 | Tag `v1.0-week2` pushed | Week 2 | ✅ Aug 24 |
+| 11 | FastAPI `/predict` endpoint working | Week 3 | ⬜ Pending |
 | 12 | Docker container builds and runs | Week 3 | ⬜ Pending |
-| 13 | `reports/api_test_report.md` with curl evidence | Week 3 | ⬜ Pending |
+| 13 | `reports/api_test_report.md` with curl tests | Week 3 | ⬜ Pending |
 | 14 | Prediction log CSV | Week 4 | ⬜ Pending |
-| 15 | `reports/drift_report.md` with KS test results | Week 4 | ⬜ Pending |
-| 16 | Final `README.md` with architecture diagram | Week 4 | ⬜ Pending |
-| 17 | 5–7 minute demo video | Aug 30 | ⬜ Pending |
-| 18 | Submitted GitHub link on BITS portal | Aug 31 | ⬜ Pending |
+| 15 | `reports/drift_report.md` | Week 4 | ⬜ Pending |
+| 16 | Final README with architecture diagram | Week 4 | ⬜ Pending |
+| 17 | 5–7 min demo video recorded | Aug 30 | ⬜ Pending |
+| 18 | GitHub link submitted on BITS portal | Aug 31 | ⬜ Pending |
 
 ---
 
@@ -368,12 +219,11 @@ git push --tags
 
 | Date | What Was Done |
 |---|---|
-| Aug 13, 2026 | Project brief analysed. Flavor A (ETA Prediction) selected. Group formed: Kishore Nandhalu, Vinay, Vishruth. GitHub account (`2025paml539-lab`) and repository `mleng-mini-project` created. Python 3.14.5 and Git 2.54.0 verified. `PROJECT_PLAN.md` committed with full 4-week plan. NYC Taxi dataset (1,458,644 rows, 191MB) downloaded from Kaggle and extracted. DVC 3.51.2 installed. `pipeline/ingest.py`, `pipeline/validate.py`, `pipeline/features.py` built and executed — all 3 scripts produce verified output. 4-level validation passed (689 outliers removed, 0.047%). 5 features engineered and saved to `data/processed/features.csv`. `artifacts/feature_schema.json` saved. `dvc.yaml`, `params.yaml`, `requirements.txt`, `.gitignore` committed. Tag `v1.0-week1` pushed. Repo has 5 commits with clear weekly history. |
-| Aug 24, 2026 | Week 2 complete. `training/train.py` built and executed. Linear Regression (R2=0.3883) vs XGBoost (R2=0.6532, RMSE=3162s, MAE=344s). XGBoost selected — R2 improvement 0.2649 exceeds 0.05 threshold. MLflow 2 runs logged. `artifacts/model.pkl`, `scaler.pkl`, `label_encoder.pkl`, `model_selection.json` saved. `reports/model_comparison.md` written. 3 output charts in `outputs/week2/`. Tag `v1.0-week2` pushed. |
-| Aug 26, 2026 | *(to be updated — Week 3 complete)* |
-| Aug 20, 2026 | *(to be updated — Week 3 complete)* |
-| Aug 23, 2026 | *(to be updated — Week 4 complete, demo recorded)* |
-| Aug 31, 2026 | *(to be updated — submitted by 11:59 PM)* |
+| Aug 13, 2026 | Project brief read. Flavor A selected. Group formed: Kishore Nandhalu, Vinay, Vishruth. GitHub account and repo created. Dataset downloaded from Kaggle (1,458,644 rows). Week 1 pipeline built and run — ingest, validate, features all working with verified output. DVC versioning set up. Tag v1.0-week1 pushed. |
+| Aug 24, 2026 | Week 2 done. Trained Linear Regression and XGBoost with MLflow tracking. XGBoost selected (R2=0.6532, RMSE=3162s). model.pkl, scaler.pkl, label_encoder.pkl saved. model_comparison.md written. Output charts in outputs/week2/. Tag v1.0-week2 pushed. |
+| Aug 26, 2026 | *(to be updated — Week 3)* |
+| Aug 30, 2026 | *(to be updated — Week 4 + demo)* |
+| Aug 31, 2026 | *(to be updated — submitted)* |
 
 ---
 
@@ -381,9 +231,4 @@ git push --tags
 
 - T1: Crowe, R. et al. *Machine Learning Production Systems*. O'Reilly, 2024.
 - T2: Burkov, A. *Machine Learning Engineering*. 2020.
-- R1: McMahon, A.P. *Machine Learning Engineering with Python*, 2nd Ed. Packt, 2023.
-- Dataset: NYC Taxi Trip Duration, Kaggle — `https://www.kaggle.com/competitions/nyc-taxi-trip-duration`
-
----
-
-*PCAM ZC412 | Mini-Project-I | Flavor A — ETA Prediction | BITS Pilani WILP*
+- Dataset: NYC Taxi Trip Duration — Kaggle
