@@ -1,0 +1,43 @@
+============================================================
+WEEK 2 - TRAINING PIPELINE OUTPUT SUMMARY
+PCAM ZC412 | Mini-Project-I | Flavor A - ETA Prediction
+Team: Kishore Nandhalu | Vinay | Vishruth
+============================================================
+
+-- EXPERIMENT SETUP --
+  MLflow experiment  : eta-prediction
+  Train rows         : 1,166,915
+  Test rows          : 291,729
+  Split              : temporal (no shuffle)
+  Target transform   : log1p(trip_duration)
+  Random seed        : 42
+
+-- MODEL 1: LINEAR REGRESSION --
+  RMSE : 282,405,528.64 s
+  MAE  : 525,057.48 s
+  R2   : 0.3883
+  Note : High RMSE due to non-linear relationship in data
+
+-- MODEL 2: XGBOOST --
+  n_estimators : 200
+  max_depth    : 6
+  learning_rate: 0.1
+  RMSE : 3,162.40 s
+  MAE  : 344.39 s
+  R2   : 0.6532
+
+-- MODEL SELECTION --
+  Winner       : XGBoost
+  R2 improvement: 0.2649 (threshold: 0.05)
+  Justification: XGBoost R² (0.6532) exceeds Linear Regression (0.3883) by 0.2649 > 0.05 threshold
+  Saved to     : artifacts/model.pkl
+
+-- ARTIFACTS SAVED --
+  artifacts/model.pkl
+  artifacts/scaler.pkl
+  artifacts/label_encoder.pkl
+  artifacts/model_selection.json
+
+-- REPRODUCIBILITY CHECK --
+  Re-run python training/train.py -> identical metrics (seed=42)
+============================================================

@@ -1,0 +1,15 @@
+{
+  "best_model": "XGBoost",
+  "lr_metrics": {
+    "rmse": 282405528.64,
+    "mae": 525057.48,
+    "r2": 0.3883
+  },
+  "xgb_metrics": {
+    "rmse": 3162.4,
+    "mae": 344.39,
+    "r2": 0.6532
+  },
+  "r2_improvement": 0.2649,
+  "justification": "XGBoost R\u00b2 (0.6532) exceeds Linear Regression (0.3883) by 0.2649 > 0.05 threshold"
+}
