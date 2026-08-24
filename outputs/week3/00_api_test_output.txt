@@ -1,0 +1,22 @@
+WEEK 3 - API TEST RUN SUMMARY
+PCAM ZC412 | Mini-Project-I | Flavor A
+Team: Kishore Nandhalu | Vinay | Vishruth
+
+API: FastAPI uvicorn serving.api:app --port 8000
+Model: XGBoost v1.0-week3
+
+GET /health -> 200 | model_loaded=true | version=v1.0-week3
+
+POST /predict valid requests:
+  Night trip (00:30)      -> 427.84s  (7.13 min)  HTTP 200
+  Morning rush (08:30)    -> 1101.86s (18.36 min) HTTP 200
+  Weekend afternoon       -> 1320.36s (22.01 min) HTTP 200
+  Evening long trip       -> 1803.75s (30.06 min) HTTP 200
+
+POST /predict invalid requests:
+  passenger_count=10      -> HTTP 422 validation error
+  pickup_longitude=-50.0  -> HTTP 422 validation error
+
+Result: 7/7 tests passed
+Valid inputs return predictions in sensible range (7-30 min)
+Invalid inputs rejected at API boundary before reaching model

@@ -181,12 +181,80 @@ ALL TESTS PASSED
 | `08_mlflow_lr_metrics.png` | Linear Regression metrics: mae=525057, r2=0.39, rmse=282M |
 | `00_training_run_output.txt` | Full training summary with both model metrics |
 
-### outputs/week3/ — Coming (FastAPI + Docker)
-### outputs/week4/ — Coming (Monitoring + Drift)
+### outputs/week3/ — FastAPI Serving
+
+| File | What it shows |
+|---|---|
+| `01_api_test_summary.png` | All 7 test results — HTTP status, input, response |
+| `02_predictions_by_time.png` | Same route predicted differently by time of day |
+| `03_api_behaviour.png` | Valid vs invalid request counts + prediction range |
+| `00_api_test_output.txt` | Full API test run summary |
 
 ---
 
-## Troubleshooting
+## Step 8 — Run Week 3 API (Serving)
+
+Start the FastAPI server:
+
+```powershell
+uvicorn serving.api:app --host 0.0.0.0 --port 8000
+```
+
+Keep this running. Open a second PowerShell window to test it.
+
+**Health check:**
+```powershell
+python -c "import urllib.request,json; r=urllib.request.urlopen('http://localhost:8000/health'); print(json.loads(r.read()))"
+```
+
+Expected:
+```
+{'status': 'ok', 'model_loaded': True, 'model_version': 'v1.0-week3'}
+```
+
+**Run all 7 API tests:**
+```powershell
+python serving/run_tests.py
+```
+
+Expected output:
+```
+T1 GET /health              -> 200  model_loaded=true
+T2 Short night trip         -> 200  427.84s (7.13 min)
+T3 Morning rush hour        -> 200  1101.86s (18.36 min)
+T4 Weekend afternoon        -> 200  1320.36s (22.01 min)
+T5 Evening long trip        -> 200  1803.75s (30.06 min)
+T6 passenger_count=10       -> 422  validation error
+T7 longitude=-50.0          -> 422  validation error
+All API tests complete
+```
+
+**Generate Week 3 charts (API must be running):**
+```powershell
+python outputs/week3/generate_outputs.py
+```
+
+Charts saved to `outputs/week3/`:
+- `01_api_test_summary.png` — test results table
+- `02_predictions_by_time.png` — same route, different hours
+- `03_api_behaviour.png` — valid vs invalid request breakdown
+
+**Run Week 3 unit tests:**
+```powershell
+python test_week3.py
+```
+
+Expected:
+```
+Results: 22 passed, 0 failed
+ALL TESTS PASSED - Week 3 is fully working
+```
+
+---
+
+## Step 9 — Run Week 4 (Monitoring + Drift) — Coming Soon
+
+---
 
 **"python not found"**
 Python was installed without adding to PATH. Re-install and tick "Add Python to PATH".

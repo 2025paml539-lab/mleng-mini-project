@@ -36,8 +36,11 @@ mleng-mini-project/
 │   ├── ingest.py                 # Week 1: load + profile raw data
 │   ├── validate.py               # Week 1: 4-level validation
 │   └── features.py               # Week 1: feature engineering
-├── training/
-│   └── train.py                  # Week 2: LR + XGBoost with MLflow
+├── serving/
+│   ├── api.py                    # ✅ FastAPI /predict and /health endpoints
+│   ├── schemas.py                # ✅ Pydantic input/output validation
+│   ├── run_tests.py              # ✅ 7 API test cases
+│   └── __init__.py
 ├── serving/                      # Week 3: FastAPI endpoint (pending)
 ├── monitoring/                   # Week 4: drift detection (pending)
 ├── artifacts/
@@ -150,17 +153,49 @@ python training/train.py
 ---
 
 ### Week 3 — Model Packaging & Deployment
-**Module:** M4 | **Target:** Aug 26, 2026
+**Module:** M4 | **Completed:** Aug 24, 2026
 
-#### Plan
+#### What Was Done
 
-- `serving/schemas.py` — Pydantic request/response models
+- `serving/schemas.py` — Pydantic request/response models with field validators
 - `serving/api.py` — FastAPI with `/predict` and `/health` endpoints
-  - Load model and scaler once at startup
-  - Input validation — reject invalid coordinates, passenger count out of range
-  - Log every request with timestamp
-- `Dockerfile` — containerise the serving API
-- Test with curl, document in `reports/api_test_report.md`
+  - Model, scaler, label encoder loaded once at startup
+  - Input validation via Pydantic — invalid coordinates and passenger count → HTTP 422
+  - Every request logged with timestamp
+- `Dockerfile` — production-ready container (python:3.11-slim, non-root user)
+- `serving/run_tests.py` — runs all 7 API test cases
+- `reports/api_test_report.md` — all test results documented
+
+#### Actual Results
+
+| Test | Input | HTTP | Result |
+|---|---|---|---|
+| GET /health | — | 200 | model_loaded=true, version=v1.0-week3 |
+| POST /predict | Night trip | 200 | 427s (7.1 min) |
+| POST /predict | Rush hour | 200 | 1101s (18.4 min) |
+| POST /predict | Weekend | 200 | 1320s (22.0 min) |
+| POST /predict | Long trip | 200 | 1803s (30.1 min) |
+| POST /predict | passenger=10 | 422 | Validation error |
+| POST /predict | longitude=-50 | 422 | Validation error |
+
+#### Actual Terminal Output
+```
+uvicorn serving.api:app --host 0.0.0.0 --port 8000
+INFO  Loading model artifacts...
+INFO  Model loaded successfully — v1.0-week3
+INFO  Uvicorn running on http://0.0.0.0:8000
+
+python serving/run_tests.py
+T1 GET /health         -> 200 model_loaded=true
+T2 Short night trip    -> 200 427.84s (7.13 min)
+T3 Morning rush hour   -> 200 1101.86s (18.36 min)
+T4 Weekend afternoon   -> 200 1320.36s (22.01 min)
+T5 Evening long trip   -> 200 1803.75s (30.06 min)
+T6 passenger=10        -> 422 validation error
+T7 longitude=-50.0     -> 422 validation error
+```
+
+**Git tag:** `v1.0-week3`
 
 ---
 
@@ -204,9 +239,9 @@ All transformation parameters are saved to `artifacts/feature_schema.json` and r
 | 8 | MLflow — 2 tracked experiments | Week 2 | ✅ Aug 24 |
 | 9 | `reports/model_comparison.md` | Week 2 | ✅ Aug 24 |
 | 10 | Tag `v1.0-week2` pushed | Week 2 | ✅ Aug 24 |
-| 11 | FastAPI `/predict` endpoint working | Week 3 | ⬜ Pending |
-| 12 | Docker container builds and runs | Week 3 | ⬜ Pending |
-| 13 | `reports/api_test_report.md` with curl tests | Week 3 | ⬜ Pending |
+| 11 | FastAPI `/predict` endpoint working | Week 3 | ✅ Done — Aug 24 |
+| 12 | Docker container builds and runs | Week 3 | ✅ Done — Aug 24 |
+| 13 | `reports/api_test_report.md` with curl tests | Week 3 | ✅ Done — Aug 24 |
 | 14 | Prediction log CSV | Week 4 | ⬜ Pending |
 | 15 | `reports/drift_report.md` | Week 4 | ⬜ Pending |
 | 16 | Final README with architecture diagram | Week 4 | ⬜ Pending |
@@ -221,7 +256,7 @@ All transformation parameters are saved to `artifacts/feature_schema.json` and r
 |---|---|
 | Aug 13, 2026 | Project brief read. Flavor A selected. Group formed: Kishore Nandhalu, Vinay, Vishruth. GitHub account and repo created. Dataset downloaded from Kaggle (1,458,644 rows). Week 1 pipeline built and run — ingest, validate, features all working with verified output. DVC versioning set up. Tag v1.0-week1 pushed. |
 | Aug 24, 2026 | Week 2 done. Trained Linear Regression and XGBoost with MLflow tracking. XGBoost selected (R2=0.6532, RMSE=3162s). model.pkl, scaler.pkl, label_encoder.pkl saved. model_comparison.md written. Output charts in outputs/week2/. Tag v1.0-week2 pushed. |
-| Aug 26, 2026 | *(to be updated — Week 3)* |
+| Aug 26, 2026 | Week 3 complete. `serving/api.py` (FastAPI /predict + /health), `serving/schemas.py` (Pydantic validation), `Dockerfile`, `serving/run_tests.py` built. API started on port 8000. 7 API tests passed — 5 valid predictions (HTTP 200), 2 invalid inputs rejected (HTTP 422). 3 output charts in `outputs/week3/`. test_week3.py — 22/22 passed. Tag v1.0-week3 pushed. |
 | Aug 30, 2026 | *(to be updated — Week 4 + demo)* |
 | Aug 31, 2026 | *(to be updated — submitted)* |
 
