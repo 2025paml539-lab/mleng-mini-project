@@ -200,14 +200,51 @@ T7 longitude=-50.0     -> 422 validation error
 ---
 
 ### Week 4 — Monitoring, Drift & Retraining
-**Module:** M5 | **Target:** Aug 30, 2026
+**Module:** M5 | **Completed:** Aug 28, 2026
 
-#### Plan
+#### What Was Done
 
-- `monitoring/logger.py` — log every prediction to CSV
-- `monitoring/simulate_drift.py` — inject rush-hour surge data to simulate drift
-- `monitoring/drift_detector.py` — KS test on feature distributions, alert if p < 0.05
-- `reports/drift_report.md` — before/after comparison with retraining trigger design
+- `monitoring/logger.py` — logs every prediction to `monitoring/prediction_log.csv`
+- `monitoring/simulate_drift.py` — injects 2 drift scenarios (rush-hour surge + festival)
+- `monitoring/drift_detector.py` — KS test + Chi-squared test, saves `drift_results.json`
+- `reports/drift_report.md` — full before/after comparison with retraining trigger design
+
+#### Results
+
+**Simulation:**
+- 300 normal records (matching training distribution)
+- 150 rush-hour surge records (distance mean 3.44km → 12.5km, peak hours only)
+- 150 festival records (distance mean 3.44km → 1.2km, late night, groups of 3–6)
+
+**Detection (after simulation):**
+
+| Feature | Test | Statistic | p-value | Result |
+|---|---|---|---|---|
+| distance_km | KS | 0.3864 | 0.000000 | DRIFT DETECTED |
+| hour_of_day | KS | 0.1775 | 0.000000 | DRIFT DETECTED |
+| passenger_count | Chi2 | 112.36 | 0.000000 | DRIFT DETECTED |
+
+**Retraining trigger:** `distance_km` KS p < 0.05 for 3 consecutive windows → human review → `python training/train.py`
+
+#### Actual Terminal Output
+```
+python monitoring/logger.py
+[LOGGER] Logged 5 predictions to monitoring/prediction_log.csv
+
+python monitoring/simulate_drift.py
+[DRIFT] 300 normal records logged
+[DRIFT] Scenario 1: 150 rush-hour records injected
+[DRIFT] Scenario 2: 150 festival records injected
+[DRIFT] Total records in log: 600
+
+python monitoring/drift_detector.py
+[distance_km]    KS stat=0.3864  p=0.000000  -> DRIFT DETECTED
+[hour_of_day]    KS stat=0.1775  p=0.000000  -> DRIFT DETECTED
+[passenger_count] Chi2=112.36    p=0.000000  -> DRIFT DETECTED
+RECOMMENDATION: Trigger retraining review.
+```
+
+**Git tag:** `v1.0-final`
 
 ---
 
@@ -242,9 +279,9 @@ All transformation parameters are saved to `artifacts/feature_schema.json` and r
 | 11 | FastAPI `/predict` endpoint working | Week 3 | ✅ Done — Aug 24 |
 | 12 | Docker container builds and runs | Week 3 | ✅ Done — Aug 24 |
 | 13 | `reports/api_test_report.md` with curl tests | Week 3 | ✅ Done — Aug 24 |
-| 14 | Prediction log CSV | Week 4 | ⬜ Pending |
-| 15 | `reports/drift_report.md` | Week 4 | ⬜ Pending |
-| 16 | Final README with architecture diagram | Week 4 | ⬜ Pending |
+| 14 | Prediction log CSV | Week 4 | ✅ Done — Aug 28 |
+| 15 | `reports/drift_report.md` | Week 4 | ✅ Done — Aug 28 |
+| 16 | Final README with architecture diagram | Week 4 | ✅ Done — Aug 28 |
 | 17 | 5–7 min demo video recorded | Aug 30 | ⬜ Pending |
 | 18 | GitHub link submitted on BITS portal | Aug 31 | ⬜ Pending |
 
@@ -257,7 +294,8 @@ All transformation parameters are saved to `artifacts/feature_schema.json` and r
 | Aug 13, 2026 | Project brief read. Flavor A selected. Group formed: Kishore Nandhalu, Vinay, Vishruth. GitHub account and repo created. Dataset downloaded from Kaggle (1,458,644 rows). Week 1 pipeline built and run — ingest, validate, features all working with verified output. DVC versioning set up. Tag v1.0-week1 pushed. |
 | Aug 24, 2026 | Week 2 done. Trained Linear Regression and XGBoost with MLflow tracking. XGBoost selected (R2=0.6532, RMSE=3162s). model.pkl, scaler.pkl, label_encoder.pkl saved. model_comparison.md written. Output charts in outputs/week2/. Tag v1.0-week2 pushed. |
 | Aug 26, 2026 | Week 3 complete. `serving/api.py` (FastAPI /predict + /health), `serving/schemas.py` (Pydantic validation), `Dockerfile`, `serving/run_tests.py` built. API started on port 8000. 7 API tests passed — 5 valid predictions (HTTP 200), 2 invalid inputs rejected (HTTP 422). 3 output charts in `outputs/week3/`. test_week3.py — 22/22 passed. Tag v1.0-week3 pushed. |
-| Aug 30, 2026 | *(to be updated — Week 4 + demo)* |
+| Aug 28, 2026 | Week 4 complete. monitoring/logger.py, simulate_drift.py, drift_detector.py built. 600 records logged (300 normal + 300 drifted). All 3 features drifted (p=0.000000). drift_results.json saved. drift_report.md written. test_week4.py — 24/24 passed. Tag v1.0-final pushed. |
+| Aug 30, 2026 | *(to be updated — demo recorded)* |
 | Aug 31, 2026 | *(to be updated — submitted)* |
 
 ---

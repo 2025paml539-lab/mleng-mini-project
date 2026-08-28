@@ -1,0 +1,34 @@
+{
+  "run_timestamp": "2026-08-28T15:48:44.042296",
+  "threshold": 0.05,
+  "log_records": 600,
+  "results": [
+    {
+      "feature": "distance_km",
+      "test": "KS",
+      "statistic": 0.3864,
+      "p_value": 0.0,
+      "drift": 1
+    },
+    {
+      "feature": "hour_of_day",
+      "test": "KS",
+      "statistic": 0.1775,
+      "p_value": 0.0,
+      "drift": 1
+    },
+    {
+      "feature": "passenger_count",
+      "test": "Chi2",
+      "statistic": 112.3559,
+      "p_value": 0.0,
+      "drift": 1
+    }
+  ],
+  "drifted_features": [
+    "distance_km",
+    "hour_of_day",
+    "passenger_count"
+  ],
+  "recommendation": "retrain"
+}

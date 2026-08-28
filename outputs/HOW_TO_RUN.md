@@ -252,7 +252,52 @@ ALL TESTS PASSED - Week 3 is fully working
 
 ---
 
-## Step 9 — Run Week 4 (Monitoring + Drift) — Coming Soon
+---
+
+## Step 9 — Run Week 4 (Monitoring + Drift Detection)
+
+```powershell
+# Step 1: Log sample predictions
+python monitoring/logger.py
+
+# Step 2: Simulate drift (300 normal + 300 drifted records)
+python monitoring/simulate_drift.py
+
+# Step 3: Run drift detector
+python monitoring/drift_detector.py
+```
+
+Expected output:
+```
+[DRIFT] 300 normal records logged
+[DRIFT] Scenario 1: 150 rush-hour records injected
+[DRIFT] Scenario 2: 150 festival records injected
+[distance_km]    KS stat=0.3864  p=0.000000  -> DRIFT DETECTED
+[hour_of_day]    KS stat=0.1775  p=0.000000  -> DRIFT DETECTED
+[passenger_count] Chi2=112.36    p=0.000000  -> DRIFT DETECTED
+RECOMMENDATION: Trigger retraining review.
+```
+
+**Generate Week 4 charts:**
+```powershell
+python outputs/week4/generate_outputs.py
+```
+
+Charts saved to `outputs/week4/`:
+- `01_distance_drift.png` — training vs normal vs drifted distance distribution
+- `02_hour_drift.png` — hour of day distribution before/after drift
+- `03_drift_detection_summary.png` — KS test results table
+
+**Run Week 4 unit tests:**
+```powershell
+python test_week4.py
+```
+
+Expected:
+```
+Results: 24 passed, 0 failed
+ALL TESTS PASSED - Week 4 is fully working
+```
 
 ---
 

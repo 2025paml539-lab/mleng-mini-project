@@ -1,0 +1,29 @@
+WEEK 4 - MONITORING AND DRIFT DETECTION SUMMARY
+PCAM ZC412 | Mini-Project-I | Flavor A
+Team: Kishore Nandhalu | Vinay | Vishruth
+
+-- PREDICTION LOG --
+  File     : monitoring/prediction_log.csv
+  Records  : 600 (300 normal + 150 rush-hour + 150 festival)
+  Logged by: monitoring/logger.py (called by serving/api.py)
+
+-- DRIFT SIMULATION --
+  Scenario 1 - Rush-hour surge (150 records)
+    distance_km mean shifted : 3.44km -> 12.5km
+    hour_of_day concentrated : peak hours 7-9am, 5-7pm only
+  Scenario 2 - Festival/holiday (150 records)
+    distance_km mean shifted : 3.44km -> 1.2km
+    hour_of_day concentrated : late night 10pm-2am only
+    passenger_count shifted  : groups of 3-6 people
+
+-- DRIFT DETECTION RESULTS --
+  Threshold : p < 0.05
+  distance_km    : KS stat=0.3864  p=0.000000  DRIFT DETECTED
+  hour_of_day    : KS stat=0.1775  p=0.000000  DRIFT DETECTED
+  passenger_count: Chi2=112.36     p=0.000000  DRIFT DETECTED
+
+-- RETRAINING TRIGGER --
+  Condition : distance_km KS p < 0.05 for 3 consecutive windows
+  Window    : every 500 new predictions
+  Action    : human review -> approve -> python training/train.py
+  Rationale : distance_km has highest feature importance (~0.55)
