@@ -15,8 +15,9 @@ import pandas as pd
 import mlflow
 import mlflow.sklearn
 import mlflow.xgboost
-os.environ.pop("MLFLOW_TRACKING_URI", None)
-mlflow.set_tracking_uri("mlruns")
+import os
+# Use SQLite backend — works on all platforms without environment variables
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
